@@ -32,7 +32,7 @@ APPLICATION_ROOT = "/emails"
 STATIC_URL_PATH = "/static"
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
 BASE_URL = os.getenv("BASE_URL", "https://app.cambridgepicture.com/emails")
-SQLITE_PATH = os.getenv("SQLITE_PATH", str(BASE_PATH / "emails.db"))
+SQLITE_PATH = os.getenv("SQLITE_PATH", str(BASE_PATH / "data" / "emails.db"))
 AUTH_ENABLED = os.getenv("AUTH_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}
 
 
