@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Rules{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Rules engine</p>
+  <h1>Rules</h1>
+  <p class="lede">Rules live in SQLite and are evaluated from top to bottom.</p>
+</section>
+
+<section class="card card-spaced">
+  <div class="section-head">
+    <h2>Manual rules</h2>
+    <a href="{{ url_for('rule_form') }}">New rule</a>
+  </div>
+  <div class="stack">
+    {% for rule in rules %}
+      <article class="list-card">
+        <div class="list-card-head">
+          <div>
+            <h3>{{ rule.name }}</h3>
+            <p class="notes">Priority {{ rule.priority }} · {{ rule.source }}{% if rule.confidence is not none %} · confidence {{ '%.2f'|format(rule.confidence or 0) }}{% endif %}</p>
+          </div>
+          <span class="badge {% if rule.enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.enabled %}Enabled{% else %}Disabled{% endif %}</span>
+        </div>
+        <div class="code-block">
+          <strong>Conditions</strong>
+          <pre>{{ rule.conditions_json }}</pre>
+          <strong>Action</strong>
+          <pre>{{ rule.action_json }}</pre>
+        </div>
+        <form class="inline-form" method="post" action="{{ url_for('toggle_rule', rule_id=rule.id) }}">
+          <button type="submit">{% if rule.enabled %}Disable{% else %}Enable{% endif %}</button>
+        </form>
+        <form class="inline-form" method="post" action="{{ url_for('remove_rule', rule_id=rule.id) }}" onsubmit="return confirm('Delete this rule?');">
+          <button type="submit" class="danger">Delete</button>
+        </form>
+      </article>
+    {% else %}
+      <p class="muted">No rules yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Emails Dashboard{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Mail triage</p>
+  <h1>Dashboard</h1>
+  <p class="lede">Review recent mail, rules, and correction learning in one place.</p>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card"><span>Messages</span><strong>{{ counts.messages }}</strong></article>
+  <article class="stat-card"><span>Active rules</span><strong>{{ counts.rules }}</strong></article>
+  <article class="stat-card"><span>Pending suggestions</span><strong>{{ counts.suggestions }}</strong></article>
+  <article class="stat-card"><span>Corrections</span><strong>{{ counts.corrections }}</strong></article>
+</section>
+
+<section class="card card-spaced">
+  <div class="section-head">
+    <h2>Recent messages</h2>
+    <a href="{{ url_for('test_message') }}">Add test message</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Received</th>
+          <th>Sender</th>
+          <th>Subject</th>
+          <th>Folder</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for message in messages %}
+        <tr>
+          <td>{{ message.received_at }}</td>
+          <td>{{ message.sender_email or message.sender_name or '-' }}</td>
+          <td><a href="{{ url_for('message_detail', message_id=message.id) }}">{{ message.subject or '(no subject)' }}</a></td>
+          <td>{{ message.current_folder or message.initial_folder }}</td>
+          <td>{{ message.classification_source or 'unknown' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="muted">No messages yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card card-spaced">
+  <div class="section-head">
+    <h2>Folders</h2>
+  </div>
+  <div class="pill-row">
+    {% for folder in folders %}
+      <span class="pill">{{ folder.display_name }} <small>{{ folder.role }}</small></span>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+

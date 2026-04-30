@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Test Message{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Classifier test</p>
+  <h1>Test message</h1>
+  <p class="lede">Submit a sample message to exercise the local rules engine and fallback scoring.</p>
+</section>
+
+<section class="card card-spaced">
+  <form class="form-grid" method="post">
+    <label class="field"><span>Graph message ID</span><input type="text" name="graph_message_id" placeholder="Optional"></label>
+    <label class="field"><span>Internet message ID</span><input type="text" name="internet_message_id" placeholder="Optional"></label>
+    <label class="field"><span>Conversation ID</span><input type="text" name="conversation_id" placeholder="Optional"></label>
+    <label class="field"><span>Sender email</span><input type="email" name="sender_email" required></label>
+    <label class="field"><span>Sender name</span><input type="text" name="sender_name"></label>
+    <label class="field"><span>Subject</span><input type="text" name="subject" required></label>
+    <label class="field"><span>Received at</span><input type="text" name="received_at" placeholder="2026-04-30T12:00:00+00:00"></label>
+    <label class="field"><span>Importance</span>
+      <select name="importance">
+        <option value="normal">normal</option>
+        <option value="high">high</option>
+        <option value="highest">highest</option>
+        <option value="low">low</option>
+      </select>
+    </label>
+    <label class="field"><span>To recipients</span><textarea name="to_recipients" rows="2" placeholder="comma or newline separated"></textarea></label>
+    <label class="field"><span>CC recipients</span><textarea name="cc_recipients" rows="2" placeholder="comma or newline separated"></textarea></label>
+    <label class="field"><span>Attachment names</span><textarea name="attachment_names" rows="2" placeholder="comma or newline separated"></textarea></label>
+    <label class="field"><span>Initial folder</span><input type="text" name="initial_folder" value="Inbox"></label>
+    <label class="field field-full"><span>Body excerpt</span><textarea name="body_excerpt" rows="8" required></textarea></label>
+    <button type="submit">Classify message</button>
+  </form>
+</section>
+{% endblock %}

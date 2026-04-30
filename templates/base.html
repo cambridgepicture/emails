@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Emails{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-frame">
+    <div class="header-shell">
+      {{ render_shared_header(
+        app_name="Emails",
+        portal_home_href="/",
+        primary_links=[
+          {'label': 'Dashboard', 'href': url_for('dashboard')},
+          {'label': 'Rules', 'href': url_for('rules')},
+          {'label': 'Suggestions', 'href': url_for('suggestions')},
+          {'label': 'Test message', 'href': url_for('test_message')},
+          {'label': 'Settings', 'href': url_for('settings')},
+        ],
+        current_user=current_user,
+        auth_enabled=shared_auth_enabled,
+        user_menu_items=[
+          {'label': 'Portal', 'href': '/'},
+          {'label': 'Log out', 'href': '/logout'},
+        ],
+      ) }}
+    </div>
+    <main class="shell">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="card card-spaced">
+            <div class="messages">
+              {% for category, message in messages %}
+                <div class="message message-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

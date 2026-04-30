@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Message {{ message.id }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Message detail</p>
+  <h1>{{ message.subject or '(no subject)' }}</h1>
+  <p class="lede">{{ message.sender_name or message.sender_email or 'Unknown sender' }} · {{ message.received_at }}</p>
+</section>
+
+<section class="card card-spaced">
+  <div class="detail-grid">
+    <div>
+      <h2>Classification</h2>
+      <p><strong>Current folder:</strong> {{ message.current_folder }}</p>
+      <p><strong>Classified folder:</strong> {{ message.classified_folder }}</p>
+      <p><strong>Source:</strong> {{ message.classification_source }}</p>
+      <p><strong>Confidence:</strong> {{ '%.2f'|format(message.classification_confidence or 0) }}</p>
+      <p><strong>Reason:</strong> {{ message.classification_reason }}</p>
+    </div>
+    <div>
+      <h2>Message data</h2>
+      <p><strong>From:</strong> {{ message.sender_email }}</p>
+      <p><strong>To:</strong> {{ message.to_recipients | join(', ') }}</p>
+      <p><strong>CC:</strong> {{ message.cc_recipients | join(', ') }}</p>
+      <p><strong>Attachments:</strong> {{ message.attachment_names | join(', ') }}</p>
+      <p><strong>Importance:</strong> {{ message.importance }}</p>
+      <p><strong>Initial folder:</strong> {{ message.initial_folder }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="card card-spaced">
+  <div class="section-head">
+    <h2>Simulate correction</h2>
+  </div>
+  <form class="form-grid" method="post" action="{{ url_for('simulate_correction', message_id=message.id) }}">
+    <label class="field"><span>From folder</span><input type="text" name="from_folder" value="{{ message.current_folder or message.initial_folder or 'inbox' }}"></label>
+    <label class="field"><span>To folder</span>
+      <select name="to_folder">
+        {% for folder in folders %}
+          <option value="{{ folder.display_name }}">{{ folder.display_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field"><span>Correction type</span>
+      <select name="correction_type">
+        <option value="user_move">user_move</option>
+        <option value="manual_reclassify">manual_reclassify</option>
+      </select>
+    </label>
+    <button type="submit">Record correction</button>
+  </form>
+</section>
+
+<section class="card card-spaced">
+  <div class="section-head">
+    <h2>Events</h2>
+  </div>
+  <div class="stack">
+    {% for event in events %}
+      <article class="list-card">
+        <h3>{{ event.event_type }}</h3>
+        <pre>{{ event.details_json }}</pre>
+        <p class="notes">{{ event.created_at }}</p>
+      </article>
+    {% else %}
+      <p class="muted">No events yet.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card card-spaced">
+  <div class="section-head">
+    <h2>Body excerpt</h2>
+  </div>
+  <pre class="body-preview">{{ message.body_excerpt or '' }}</pre>
+</section>
+{% endblock %}
+

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}New Rule{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Manual rule</p>
+  <h1>Create rule</h1>
+  <p class="lede">Enter JSON-style matching fields through a simple form.</p>
+</section>
+
+<section class="card card-spaced">
+  <form class="form-grid" method="post">
+    <label class="field"><span>Name</span><input type="text" name="name" required></label>
+    <label class="field"><span>Priority</span><input type="number" name="priority" value="100" min="1"></label>
+    <label class="field"><span>Confidence</span><input type="number" name="confidence" step="0.01" min="0" max="1" placeholder="Optional"></label>
+    <label class="field"><span>Move to</span>
+      <select name="move_to">
+        {% for folder in folders %}
+          <option value="{{ folder.display_name }}">{{ folder.display_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field"><span>From email</span><input type="text" name="from_email" placeholder="someone@example.com"></label>
+    <label class="field"><span>From domain</span><input type="text" name="from_domain" placeholder="example.com"></label>
+    <label class="field"><span>Importance</span><input type="text" name="importance" placeholder="high, normal, low"></label>
+    <label class="field"><span>Subject contains any</span><textarea name="subject_contains_any" rows="3" placeholder="invoice&#10;payment"></textarea></label>
+    <label class="field"><span>Body contains any</span><textarea name="body_contains_any" rows="3" placeholder="action required&#10;bank details"></textarea></label>
+    <label class="field"><span>Attachment contains any</span><textarea name="attachment_contains_any" rows="3" placeholder="invoice"></textarea></label>
+    <label class="field"><span>Exclude contains any</span><textarea name="exclude_contains_any" rows="3" placeholder="newsletter"></textarea></label>
+    <label class="checkbox-row"><input type="checkbox" name="to_me_only"><span>To me only</span></label>
+    <label class="checkbox-row"><input type="checkbox" name="cc_only"><span>CC only</span></label>
+    <button type="submit">Save rule</button>
+  </form>
+</section>
+{% endblock %}
+

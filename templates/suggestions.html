@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Suggestions{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Learning loop</p>
+  <h1>Suggestions</h1>
+  <p class="lede">Corrections that repeat can become rules after review.</p>
+</section>
+
+<section class="card card-spaced">
+  <div class="stack">
+    {% for suggestion in suggestions %}
+      <article class="list-card">
+        <div class="list-card-head">
+          <div>
+            <h3>{{ suggestion.name }}</h3>
+            <p class="notes">Target {{ suggestion.target_folder }} · {{ suggestion.based_on_correction_count }} corrections · confidence {{ '%.2f'|format(suggestion.confidence or 0) }}</p>
+          </div>
+          <span class="badge badge-on">{{ suggestion.status }}</span>
+        </div>
+        <div class="code-block">
+          <pre>{{ suggestion.proposed_rule_json }}</pre>
+        </div>
+        <form class="inline-form" method="post" action="{{ url_for('approve_rule_suggestion', suggestion_id=suggestion.id) }}">
+          <button type="submit">Approve</button>
+        </form>
+        <form class="inline-form" method="post" action="{{ url_for('reject_rule_suggestion', suggestion_id=suggestion.id) }}">
+          <button type="submit" class="danger">Reject</button>
+        </form>
+      </article>
+    {% else %}
+      <p class="muted">No pending suggestions.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+

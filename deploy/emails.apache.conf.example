@@ -1,0 +1,13 @@
+<VirtualHost *:80>
+    ServerName app.cambridgepicture.com
+
+    ProxyPreserveHost On
+    ProxyPass /emails http://127.0.0.1:8010/
+    ProxyPassReverse /emails http://127.0.0.1:8010/
+
+    RequestHeader set X-Forwarded-Prefix "/emails"
+
+    ErrorLog ${APACHE_LOG_DIR}/emails_error.log
+    CustomLog ${APACHE_LOG_DIR}/emails_access.log combined
+</VirtualHost>
+
