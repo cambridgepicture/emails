@@ -9,6 +9,13 @@
 <body>
   <div class="app-frame">
     <div class="header-shell">
+      {% set emails_user_menu = [{'label': 'Portal', 'href': '/'}] %}
+      {% if graph_connected %}
+        {% set emails_user_menu = emails_user_menu + [{'label': 'Settings', 'href': url_for('settings')}] %}
+      {% else %}
+        {% set emails_user_menu = emails_user_menu + [{'label': 'Connect Microsoft 365', 'href': url_for('login')}] %}
+      {% endif %}
+      {% set emails_user_menu = emails_user_menu + [{'label': 'Log out', 'href': '/logout'}] %}
       {{ render_shared_header(
         app_name="Emails",
         portal_home_href="/",
@@ -21,10 +28,7 @@
         ],
         current_user=current_user,
         auth_enabled=shared_auth_enabled,
-        user_menu_items=[
-          {'label': 'Portal', 'href': '/'},
-          {'label': 'Log out', 'href': '/logout'},
-        ],
+        user_menu_items=emails_user_menu,
       ) }}
     </div>
     <main class="shell">

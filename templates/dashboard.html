@@ -4,7 +4,33 @@
 <section class="hero">
   <p class="eyebrow">Mail triage</p>
   <h1>Dashboard</h1>
-  <p class="lede">Review recent mail, rules, and correction learning in one place.</p>
+  <p class="lede">
+    {% if graph_connected %}
+      Review recent mail, rules, and correction learning with Microsoft 365 connected.
+    {% else %}
+      Connect Microsoft 365 to pull live mail into the classifier.
+    {% endif %}
+  </p>
+</section>
+
+<section class="card card-spaced">
+  <div class="section-head">
+    <h2>Microsoft 365</h2>
+  </div>
+  {% if graph_connected %}
+    <p class="muted">Connected and ready to sync live messages from {{ base_url }}.</p>
+    <div class="inline-form">
+      <form method="post" action="{{ url_for('sync') }}">
+        <button type="submit">Sync inbox now</button>
+      </form>
+      <form method="post" action="{{ url_for('disconnect') }}">
+        <button type="submit" class="danger">Disconnect</button>
+      </form>
+    </div>
+  {% else %}
+    <p class="muted">Microsoft 365 is not connected yet.</p>
+    <a class="button-link" href="{{ url_for('login') }}">Connect Microsoft 365</a>
+  {% endif %}
 </section>
 
 <section class="stats-grid">
@@ -58,4 +84,3 @@
   </div>
 </section>
 {% endblock %}
-

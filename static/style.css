@@ -249,8 +249,31 @@ button:hover {
   filter: brightness(1.04);
 }
 
+button,
+.button-link {
+  min-height: 48px;
+}
+
 button.danger {
   background: var(--danger);
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(33, 94, 120, 0.18);
+  background: rgba(33, 94, 120, 0.10);
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button-link:hover {
+  text-decoration: none;
+  background: rgba(33, 94, 120, 0.16);
 }
 
 .inline-form {

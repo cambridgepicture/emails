@@ -109,6 +109,12 @@ CREATE TABLE IF NOT EXISTS classification_events (
     FOREIGN KEY(message_id) REFERENCES messages(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS graph_tokens (
+    portal_email TEXT PRIMARY KEY,
+    token_cache BLOB NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_messages_received_at ON messages(received_at DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_current_folder ON messages(current_folder);
 CREATE INDEX IF NOT EXISTS idx_rules_enabled_priority ON rules(enabled, priority);
@@ -142,6 +148,33 @@ def init_db(conn: sqlite3.Connection) -> None:
             """,
             (row["graph_folder_id"], row["display_name"], row["role"], now, now),
         )
+    conn.commit()
+
+
+def set_graph_token_cache(conn: sqlite3.Connection, portal_email: str, blob: bytes) -> None:
+    conn.execute(
+        """
+        INSERT INTO graph_tokens (portal_email, token_cache, updated_at)
+        VALUES (?, ?, ?)
+        ON CONFLICT(portal_email) DO UPDATE SET
+            token_cache = excluded.token_cache,
+            updated_at = excluded.updated_at
+        """,
+        (portal_email.lower().strip(), blob, utc_now()),
+    )
+    conn.commit()
+
+
+def get_graph_token_cache(conn: sqlite3.Connection, portal_email: str) -> bytes | None:
+    row = conn.execute(
+        "SELECT token_cache FROM graph_tokens WHERE portal_email = ?",
+        (portal_email.lower().strip(),),
+    ).fetchone()
+    return None if row is None else row["token_cache"]
+
+
+def delete_graph_token_cache(conn: sqlite3.Connection, portal_email: str) -> None:
+    conn.execute("DELETE FROM graph_tokens WHERE portal_email = ?", (portal_email.lower().strip(),))
     conn.commit()
 
 

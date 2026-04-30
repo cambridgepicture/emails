@@ -32,13 +32,31 @@ APPLICATION_ROOT = "/emails"
 STATIC_URL_PATH = "/static"
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
 BASE_URL = os.getenv("BASE_URL", "https://app.cambridgepicture.com/emails")
+TENANT_ID = os.environ["AZURE_TENANT_ID"]
+CLIENT_ID = os.environ["AZURE_CLIENT_ID"]
+CLIENT_SECRET = os.environ["AZURE_CLIENT_SECRET"]
+REDIRECT_PATH = "/auth/callback"
+REDIRECT_URI = BASE_URL.rstrip("/") + REDIRECT_PATH
+GRAPH_AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
+GRAPH_SCOPES = ["User.Read", "Mail.ReadWrite"]
+GRAPH_API_BASE = "https://graph.microsoft.com/v1.0"
 SQLITE_PATH = os.getenv("SQLITE_PATH", str(BASE_PATH / "data" / "emails.db"))
+DB_ENCRYPTION_KEY = os.environ["DB_ENCRYPTION_KEY"]
 AUTH_ENABLED = os.getenv("AUTH_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}
 
 
 class Config:
     SECRET_KEY = SECRET_KEY
     BASE_URL = BASE_URL
+    TENANT_ID = TENANT_ID
+    CLIENT_ID = CLIENT_ID
+    CLIENT_SECRET = CLIENT_SECRET
+    REDIRECT_PATH = REDIRECT_PATH
+    REDIRECT_URI = REDIRECT_URI
+    GRAPH_AUTHORITY = GRAPH_AUTHORITY
+    GRAPH_SCOPES = GRAPH_SCOPES
+    GRAPH_API_BASE = GRAPH_API_BASE
     SQLITE_PATH = SQLITE_PATH
+    DB_ENCRYPTION_KEY = DB_ENCRYPTION_KEY
     APPLICATION_ROOT = APPLICATION_ROOT
     STATIC_URL_PATH = STATIC_URL_PATH

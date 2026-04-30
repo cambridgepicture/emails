@@ -1,6 +1,6 @@
 Flask
 gunicorn
-requests
+requests==2.32.3
 python-dotenv
-msal
-
+msal==1.30.0
+cryptography==43.0.1

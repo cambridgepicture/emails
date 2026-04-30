@@ -4,12 +4,33 @@
 <section class="hero">
   <p class="eyebrow">Admin</p>
   <h1>Settings</h1>
-  <p class="lede">Phase 1 uses this page as a placeholder and test inbox entry point.</p>
+  <p class="lede">Manage the Microsoft 365 connection and local classification settings.</p>
 </section>
 
 <section class="card card-spaced">
-  <h2>Placeholder</h2>
-  <p class="muted">Use the test message form to try the classifier before Graph ingestion is connected.</p>
+  <h2>Microsoft 365</h2>
+  {% if graph_connected %}
+    <p class="muted">Connected to Microsoft 365. Live inbox sync is available now.</p>
+    <div class="inline-form">
+      <form method="post" action="{{ url_for('sync') }}">
+        <button type="submit">Sync inbox now</button>
+      </form>
+      <form method="post" action="{{ url_for('disconnect') }}">
+        <button type="submit" class="danger">Disconnect</button>
+      </form>
+    </div>
+  {% else %}
+    <p class="muted">Click through the Microsoft login to authorize live mailbox access.</p>
+    <a class="button-link" href="{{ url_for('login') }}">Connect Microsoft 365</a>
+  {% endif %}
+</section>
+
+<section class="card card-spaced">
+  <h2>Live access</h2>
+  <p class="muted">Redirect URI: <code>{{ redirect_uri }}</code></p>
+  <p class="muted">Authority: <code>{{ graph_authority }}</code></p>
+  <p class="muted">Scopes: <code>{{ graph_scopes | join(', ') }}</code></p>
+  <p class="muted">Graph base: <code>{{ graph_api_base }}</code></p>
 </section>
 
 <section class="card card-spaced">
@@ -23,4 +44,3 @@
   </div>
 </section>
 {% endblock %}
-

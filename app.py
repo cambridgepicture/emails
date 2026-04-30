@@ -4,13 +4,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, flash, g, redirect, render_template, request, url_for
+from flask import Flask, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from auth_adapter import AUTH_ENABLED, current_user as app_current_user, require_app_access
-from config import APPLICATION_ROOT, Config, SQLITE_PATH, STATIC_URL_PATH
+from config import APPLICATION_ROOT, BASE_URL, Config, GRAPH_API_BASE, GRAPH_AUTHORITY, GRAPH_SCOPES, REDIRECT_URI, SQLITE_PATH, STATIC_URL_PATH
 from services.classifier import upsert_and_classify_message
 from services.correction_detector import approve_suggestion, maybe_create_suggestion_for_correction, record_correction, reject_suggestion
+from services.graph_client import auth_url, clear_token_cache, complete_auth, fetch_messages, get_access_token
+from shared import install_shared_header
 from services.db import (
     add_classification_event,
     connect_db,
@@ -37,7 +39,14 @@ BASE_PATH = Path(__file__).resolve().parent
 
 app = Flask(__name__, template_folder="templates", static_folder="static", static_url_path=STATIC_URL_PATH)
 app.config.from_object(Config)
+app.config.update(
+    PREFERRED_URL_SCHEME="https",
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+install_shared_header(app, auth_enabled=AUTH_ENABLED)
 login_required = require_app_access("emails")
 
 
@@ -54,6 +63,38 @@ def _get_db():
         db = connect_db(SQLITE_PATH)
         g.emails_db = db
     return db
+
+
+def portal_email() -> str:
+    user = app_current_user()
+    if user is None:
+        raise RuntimeError("No portal user available.")
+    return str(user.email).lower().strip()
+
+
+def graph_access_token() -> str | None:
+    return get_access_token(_get_db(), Config, portal_email())
+
+
+def require_graph_connection():
+    token = graph_access_token()
+    if token is None:
+        flash("Connect your Microsoft 365 account to continue.", "error")
+        return redirect(url_for("settings"))
+    return token
+
+
+def sync_live_messages(page_size: int = 25) -> dict[str, int]:
+    token = graph_access_token()
+    if token is None:
+        return {"synced": 0, "classified": 0}
+    db = _get_db()
+    payloads = fetch_messages(token, Config, page_size=page_size)
+    classified = 0
+    for payload in payloads:
+        upsert_and_classify_message(db, payload)
+        classified += 1
+    return {"synced": len(payloads), "classified": classified}
 
 
 @app.before_request
@@ -74,6 +115,7 @@ def inject_context():
         "app_path": _app_path,
         "current_user": app_current_user(),
         "shared_auth_enabled": AUTH_ENABLED,
+        "graph_connected": graph_access_token() is not None,
     }
 
 
@@ -152,6 +194,50 @@ def root_redirect():
     return redirect(url_for("dashboard"))
 
 
+@app.get("/login")
+@login_required
+def login():
+    state = utc_now()
+    session["oauth_state"] = state
+    return redirect(auth_url(_get_db(), Config, portal_email(), state))
+
+
+@app.get("/auth/callback")
+@login_required
+def auth_callback():
+    if request.args.get("state") != session.get("oauth_state"):
+        return "Invalid state", 400
+    code = request.args.get("code")
+    if not code:
+        return "Missing code", 400
+    result = complete_auth(_get_db(), Config, portal_email(), code)
+    if "error" in result:
+        return f"Auth error: {result.get('error_description') or result.get('error')}", 400
+    flash("Microsoft 365 account connected.", "message")
+    stats = sync_live_messages(page_size=25)
+    flash(f"Synced {stats['synced']} live messages from Microsoft 365.", "message")
+    return redirect(url_for("dashboard"))
+
+
+@app.post("/disconnect")
+@login_required
+def disconnect():
+    clear_token_cache(_get_db(), portal_email())
+    flash("Microsoft 365 connection removed.", "message")
+    return redirect(url_for("settings"))
+
+
+@app.post("/sync")
+@login_required
+def sync():
+    token = require_graph_connection()
+    if not isinstance(token, str):
+        return token
+    stats = sync_live_messages(page_size=25)
+    flash(f"Synced {stats['synced']} live messages from Microsoft 365.", "message")
+    return redirect(url_for("dashboard"))
+
+
 @app.get("/dashboard")
 @login_required
 def dashboard():
@@ -160,6 +246,7 @@ def dashboard():
     rules = list_rules(db)
     suggestions = list_suggestions(db, status="pending")
     folders = list_folders(db)
+    graph_connected = graph_access_token() is not None
     counts = {
         "messages": db.execute("SELECT COUNT(*) AS count FROM messages").fetchone()["count"],
         "rules": db.execute("SELECT COUNT(*) AS count FROM rules WHERE enabled = 1").fetchone()["count"],
@@ -173,6 +260,12 @@ def dashboard():
         rules=rules,
         suggestions=suggestions,
         folders=folders,
+        graph_connected=graph_connected,
+        graph_authority=GRAPH_AUTHORITY,
+        graph_scopes=GRAPH_SCOPES,
+        redirect_uri=REDIRECT_URI,
+        base_url=BASE_URL,
+        graph_api_base=GRAPH_API_BASE,
     )
 
 
@@ -341,9 +434,19 @@ def test_message():
 def settings():
     db = _get_db()
     folders = list_folders(db)
+    graph_connected = graph_access_token() is not None
     if request.method == "POST":
         flash("Settings page is a placeholder for phase 1.", "message")
-    return render_template("settings.html", folders=folders)
+    return render_template(
+        "settings.html",
+        folders=folders,
+        graph_connected=graph_connected,
+        graph_authority=GRAPH_AUTHORITY,
+        graph_scopes=GRAPH_SCOPES,
+        redirect_uri=REDIRECT_URI,
+        base_url=BASE_URL,
+        graph_api_base=GRAPH_API_BASE,
+    )
 
 
 def create_app() -> Flask:
