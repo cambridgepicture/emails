@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from shared.site import app_base_url
+
 try:
     from dotenv import load_dotenv
 except ImportError:  # pragma: no cover - optional dependency in this workspace
@@ -31,7 +33,7 @@ load_dotenv(BASE_PATH / ".env")
 APPLICATION_ROOT = "/emails"
 STATIC_URL_PATH = "/static"
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
-BASE_URL = os.getenv("BASE_URL", "https://app.cambridgepicture.com/emails")
+BASE_URL = app_base_url("/emails", os.getenv("BASE_URL"))
 TENANT_ID = os.environ["AZURE_TENANT_ID"]
 CLIENT_ID = os.environ["AZURE_CLIENT_ID"]
 CLIENT_SECRET = os.environ["AZURE_CLIENT_SECRET"]

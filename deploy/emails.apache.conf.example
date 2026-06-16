@@ -1,5 +1,5 @@
 <VirtualHost *:80>
-    ServerName app.cambridgepicture.com
+    ServerName example.invalid
 
     ProxyPreserveHost On
     ProxyPass /emails http://127.0.0.1:8010/
@@ -10,4 +10,3 @@
     ErrorLog ${APACHE_LOG_DIR}/emails_error.log
     CustomLog ${APACHE_LOG_DIR}/emails_access.log combined
 </VirtualHost>
-
