@@ -1,0 +1,17 @@
+[Unit]
+Description=Emails Gunicorn service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/apps/emails
+EnvironmentFile=/var/www/apps/portal/.env
+Environment="PYTHONPATH=/var/www/apps"
+ExecStart=/var/www/apps/.venv/bin/gunicorn -w 1 --threads 2 --timeout 180 -b 127.0.0.1:8010 wsgi:application
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

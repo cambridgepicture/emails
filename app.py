@@ -13,6 +13,7 @@ from services.classifier import upsert_and_classify_message
 from services.correction_detector import approve_suggestion, maybe_create_suggestion_for_correction, record_correction, reject_suggestion
 from services.graph_client import auth_url, clear_token_cache, complete_auth, fetch_messages, get_access_token
 from shared import install_shared_header
+from shared.auth import graph_token_cache_key
 from services.db import (
     add_classification_event,
     connect_db,
@@ -41,6 +42,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static", stati
 app.config.from_object(Config)
 app.config.update(
     PREFERRED_URL_SCHEME="https",
+    SESSION_COOKIE_PATH="/",
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
@@ -72,8 +74,15 @@ def portal_email() -> str:
     return str(user.email).lower().strip()
 
 
+def portal_graph_cache_key() -> str:
+    user = app_current_user()
+    if user is None:
+        raise RuntimeError("No portal user available.")
+    return graph_token_cache_key(user)
+
+
 def graph_access_token() -> str | None:
-    return get_access_token(_get_db(), Config, portal_email())
+    return get_access_token(_get_db(), Config, portal_graph_cache_key())
 
 
 def require_graph_connection():
@@ -199,7 +208,7 @@ def root_redirect():
 def login():
     state = utc_now()
     session["oauth_state"] = state
-    return redirect(auth_url(_get_db(), Config, portal_email(), state))
+    return redirect(auth_url(_get_db(), Config, portal_graph_cache_key(), state))
 
 
 @app.get("/auth/callback")
@@ -210,7 +219,7 @@ def auth_callback():
     code = request.args.get("code")
     if not code:
         return "Missing code", 400
-    result = complete_auth(_get_db(), Config, portal_email(), code)
+    result = complete_auth(_get_db(), Config, portal_graph_cache_key(), code)
     if "error" in result:
         return f"Auth error: {result.get('error_description') or result.get('error')}", 400
     flash("Microsoft 365 account connected.", "message")
@@ -222,7 +231,7 @@ def auth_callback():
 @app.post("/disconnect")
 @login_required
 def disconnect():
-    clear_token_cache(_get_db(), portal_email())
+    clear_token_cache(_get_db(), portal_graph_cache_key())
     flash("Microsoft 365 connection removed.", "message")
     return redirect(url_for("settings"))
 

@@ -6,6 +6,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+from shared.user_store import delete_graph_token_cache as shared_delete_graph_token_cache
+from shared.user_store import get_graph_token_cache as shared_get_graph_token_cache
+from shared.user_store import set_graph_token_cache as shared_set_graph_token_cache
+
 
 DEFAULT_FOLDER_ROWS = [
     {"graph_folder_id": "inbox", "display_name": "Inbox", "role": "inbox"},
@@ -152,30 +156,15 @@ def init_db(conn: sqlite3.Connection) -> None:
 
 
 def set_graph_token_cache(conn: sqlite3.Connection, portal_email: str, blob: bytes) -> None:
-    conn.execute(
-        """
-        INSERT INTO graph_tokens (portal_email, token_cache, updated_at)
-        VALUES (?, ?, ?)
-        ON CONFLICT(portal_email) DO UPDATE SET
-            token_cache = excluded.token_cache,
-            updated_at = excluded.updated_at
-        """,
-        (portal_email.lower().strip(), blob, utc_now()),
-    )
-    conn.commit()
+    shared_set_graph_token_cache(portal_email, blob)
 
 
 def get_graph_token_cache(conn: sqlite3.Connection, portal_email: str) -> bytes | None:
-    row = conn.execute(
-        "SELECT token_cache FROM graph_tokens WHERE portal_email = ?",
-        (portal_email.lower().strip(),),
-    ).fetchone()
-    return None if row is None else row["token_cache"]
+    return shared_get_graph_token_cache(portal_email)
 
 
 def delete_graph_token_cache(conn: sqlite3.Connection, portal_email: str) -> None:
-    conn.execute("DELETE FROM graph_tokens WHERE portal_email = ?", (portal_email.lower().strip(),))
-    conn.commit()
+    shared_delete_graph_token_cache(portal_email)
 
 
 def _json_load(value: Any, default: Any) -> Any:
